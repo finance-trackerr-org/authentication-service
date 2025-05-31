@@ -57,7 +57,9 @@ public class UserService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDto.getEmail(),loginDto.getPassword())
         );
-        String jwtToken = jwtService.generateToken(loginDto.getEmail());
+        Optional<UserInfo> userOptional = userRepository.findByEmail(loginDto.getEmail());
+        UserInfo user = userOptional.get();
+        String jwtToken = jwtService.generateToken(user.getEmail(), String.valueOf(user.getRole()));
         ApiResponse<Object> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
                 messageSource.getMessage("token.creation.success",null, Locale.getDefault()),
