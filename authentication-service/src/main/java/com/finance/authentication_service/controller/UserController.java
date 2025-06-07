@@ -3,9 +3,8 @@ package com.finance.authentication_service.controller;
 import com.finance.authentication_service.dto.ApiResponse;
 import com.finance.authentication_service.dto.LoginDto;
 import com.finance.authentication_service.dto.RegisterDto;
-import com.finance.authentication_service.entity.UserInfo;
 import com.finance.authentication_service.service.UserService;
-import org.springframework.data.domain.Page;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,12 +20,12 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    ResponseEntity<ApiResponse<RegisterDto>> register(@RequestBody RegisterDto registerDto){
+    ResponseEntity<ApiResponse<RegisterDto>> register(@Valid @RequestBody RegisterDto registerDto){
         return userService.registerUser(registerDto);
     }
 
     @PostMapping("/login")
-    ResponseEntity<ApiResponse<Object>> login(@RequestBody LoginDto loginDto){
+    ResponseEntity<ApiResponse<Object>> login(@Valid @RequestBody LoginDto loginDto){
         return userService.loginUser(loginDto);
     }
 

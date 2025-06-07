@@ -26,7 +26,7 @@ public class UserInfoDetailService implements UserDetailsService {
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         UserInfo userInfo = userRepository.findByEmail(userName)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        messageSource.getMessage("user.register.success",null, Locale.getDefault())
+                        messageSource.getMessage("user.found.fail",null, Locale.getDefault())
                 ));
         return new UserInfoDetails(userInfo);
     }

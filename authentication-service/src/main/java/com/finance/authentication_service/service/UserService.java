@@ -4,6 +4,8 @@ import com.finance.authentication_service.dto.ApiResponse;
 import com.finance.authentication_service.dto.LoginDto;
 import com.finance.authentication_service.dto.RegisterDto;
 import com.finance.authentication_service.entity.UserInfo;
+import com.finance.authentication_service.exception.ResourceNotFoundException;
+import com.finance.authentication_service.exception.UnauthorizedAccessException;
 import com.finance.authentication_service.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.MessageSource;
@@ -14,11 +16,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,24 +44,39 @@ public class UserService {
     }
 
     public ResponseEntity<ApiResponse<RegisterDto>> registerUser(RegisterDto registerDto){
-        String hashedPassword = passwordEncoder.encode(registerDto.getPassword());
-        registerDto.setPassword(hashedPassword);
-        UserInfo userInfo = modelMapper.map(registerDto, UserInfo.class);
-        userRepository.save(userInfo);
-        ApiResponse<RegisterDto> apiResponse = new ApiResponse<>(
-                HttpStatus.OK,
-                messageSource.getMessage("user.register.success",null, Locale.ENGLISH),
-                null
-        );
-        return ResponseEntity.ok(apiResponse);
+        try {
+            String hashedPassword = passwordEncoder.encode(registerDto.getPassword());
+            registerDto.setPassword(hashedPassword);
+            UserInfo userInfo = modelMapper.map(registerDto, UserInfo.class);
+            userRepository.save(userInfo);
+            ApiResponse<RegisterDto> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    messageSource.getMessage("user.register.success", null, Locale.ENGLISH),
+                    null
+            );
+            return ResponseEntity.ok(apiResponse);
+        }catch (Exception ex){
+            throw new RuntimeException(
+                    messageSource.getMessage("record.saving.error", null, Locale.ENGLISH),
+                    ex
+            );
+        }
     }
 
     public ResponseEntity<ApiResponse<Object>> loginUser(LoginDto loginDto) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginDto.getEmail(),loginDto.getPassword())
-        );
-        Optional<UserInfo> userOptional = userRepository.findByEmail(loginDto.getEmail());
-        UserInfo user = userOptional.get();
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+            );
+        } catch (AuthenticationException e) {
+            throw new UnauthorizedAccessException(
+                    messageSource.getMessage("user.login.failed", null, Locale.ENGLISH)
+            );
+        }
+        UserInfo user = userRepository.findByEmail(loginDto.getEmail())
+                .orElseThrow(() -> new UnauthorizedAccessException(
+                        messageSource.getMessage("user.login.failed", null, Locale.ENGLISH)
+                ));
         String jwtToken = jwtService.generateToken(user.getEmail(), String.valueOf(user.getRole()));
         ApiResponse<Object> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
@@ -80,7 +98,9 @@ public class UserService {
             );
         }
         else{
-            Optional<UserInfo> user = userRepository.findById(userId);
+            Optional<UserInfo> user = Optional.ofNullable(userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException(
+                    messageSource.getMessage("user.found.fail", null, Locale.getDefault())
+            )));
             response = new ApiResponse<>(
                     HttpStatus.OK,
                     messageSource.getMessage("users.retrieved.success",null, Locale.getDefault()),
