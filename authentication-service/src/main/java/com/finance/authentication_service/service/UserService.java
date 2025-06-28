@@ -4,6 +4,7 @@ import com.finance.authentication_service.dto.ApiResponse;
 import com.finance.authentication_service.dto.LoginDto;
 import com.finance.authentication_service.dto.RegisterDto;
 import com.finance.authentication_service.entity.UserInfo;
+import com.finance.authentication_service.exception.BadRequestException;
 import com.finance.authentication_service.exception.ResourceNotFoundException;
 import com.finance.authentication_service.exception.UnauthorizedAccessException;
 import com.finance.authentication_service.repository.UserRepository;
@@ -48,6 +49,11 @@ public class UserService {
             String hashedPassword = passwordEncoder.encode(registerDto.getPassword());
             registerDto.setPassword(hashedPassword);
             UserInfo userInfo = modelMapper.map(registerDto, UserInfo.class);
+            Optional<UserInfo> userDetails = userRepository.findByEmail(registerDto.getEmail());
+            if(userDetails.isPresent()) {
+                System.out.println("HIiiiiiiiii");
+                throw new BadRequestException(messageSource.getMessage("user.already.exists", null, Locale.ENGLISH));
+            }
             userRepository.save(userInfo);
             ApiResponse<RegisterDto> apiResponse = new ApiResponse<>(
                     HttpStatus.OK,
@@ -55,10 +61,11 @@ public class UserService {
                     null
             );
             return ResponseEntity.ok(apiResponse);
-        }catch (Exception ex){
+        } catch(BadRequestException ex) {
+            throw ex;
+        } catch (Exception ex){
             throw new RuntimeException(
-                    messageSource.getMessage("record.saving.error", null, Locale.ENGLISH),
-                    ex
+                    messageSource.getMessage("record.saving.error", null, Locale.ENGLISH)
             );
         }
     }

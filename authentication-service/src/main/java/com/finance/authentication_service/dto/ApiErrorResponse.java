@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -19,7 +20,7 @@ public class ApiErrorResponse<T> {
         this.errors = errors;
     }
 
-    public ApiErrorResponse(HttpStatus status, String message, Map<String,String> errors){
+    public ApiErrorResponse(HttpStatus status, String message, List<String> errors){
         this.status = status;
         this.message = message;
         this.errors = errors;

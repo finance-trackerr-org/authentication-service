@@ -34,6 +34,7 @@ public class JwtService {
     public String generateToken(String email,String role){
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        System.out.println("accessExpiration=== "+accessExpiration);
 
         return Jwts.builder()
                 .setClaims(claims)

@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse<Object>> handleGenericException(Exception ex) {
+        System.out.println(ex);
         ApiErrorResponse<Object> response = new ApiErrorResponse<>(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Something went wrong",
@@ -34,17 +36,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ApiErrorResponse<Object>> handleNotFound(BadRequestException ex) {
+    public ResponseEntity<ApiErrorResponse<Object>> handleBadRequest(BadRequestException ex) {
         ApiErrorResponse<Object> response = new ApiErrorResponse<>(
                 HttpStatus.NOT_FOUND,
                 "Bad Request",
                 ex.getMessage()
         );
+        System.out.println("Noooooooooo");
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UnauthorizedAccessException.class)
-    public ResponseEntity<ApiErrorResponse<Object>> handleNotFound(UnauthorizedAccessException ex) {
+    public ResponseEntity<ApiErrorResponse<Object>> handleUnauthorized(UnauthorizedAccessException ex) {
         ApiErrorResponse<Object> response = new ApiErrorResponse<>(
                 HttpStatus.NOT_FOUND,
                 "Unauthorized",
@@ -55,10 +58,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
+        ArrayList<String> errors = new ArrayList<>();
 
         ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage())
+                errors.add(error.getDefaultMessage())
         );
 
         ApiErrorResponse<Object> response = new ApiErrorResponse<>(
@@ -72,12 +75,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Object> handleConstraintViolations(ConstraintViolationException ex) {
-        Map<String, String> errors = new HashMap<>();
+        ArrayList<String> errors = new ArrayList<>();
         ex.getConstraintViolations().forEach(violation ->
-                errors.put(
-                        violation.getPropertyPath().toString(),
-                        violation.getMessage()
-                )
+                errors.add(violation.getMessage())
         );
 
         ApiErrorResponse<Object> response = new ApiErrorResponse<>(
