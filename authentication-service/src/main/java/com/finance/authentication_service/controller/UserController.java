@@ -35,4 +35,9 @@ public class UserController {
                                                             @RequestParam(value = "size",required = false,defaultValue = "2") int size){
         return userService.getUserDetails(userId,page,size);
     }
+
+    @GetMapping("/user")
+    ResponseEntity<ApiResponse<Object>> getUserDetailsByUserName(@RequestParam(value="userName",required = true,defaultValue = "") String userName){
+        return userService.getUserDetailsByUserName(userName);
+    }
 }

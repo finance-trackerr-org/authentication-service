@@ -58,8 +58,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     filterChain.doFilter(request, response);
-                }
-                throw new JwtException("Unauthorized user");
+                    return;
+                } else throw new JwtException("Unauthorized user");
             }
             throw new JwtException("Unauthorized user");
         }catch (ExpiredJwtException ex) {

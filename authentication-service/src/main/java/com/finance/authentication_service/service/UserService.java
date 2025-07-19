@@ -19,6 +19,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -84,7 +85,7 @@ public class UserService {
                 .orElseThrow(() -> new UnauthorizedAccessException(
                         messageSource.getMessage("user.login.failed", null, Locale.ENGLISH)
                 ));
-        String jwtToken = jwtService.generateToken(user.getEmail(), String.valueOf(user.getRole()));
+        String jwtToken = jwtService.generateToken(user.getEmail(),user.getId(), String.valueOf(user.getRole()));
         ApiResponse<Object> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
                 messageSource.getMessage("token.creation.success",null, Locale.getDefault()),
@@ -114,6 +115,19 @@ public class UserService {
                     user
             );
         }
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<ApiResponse<Object>> getUserDetailsByUserName(String userName) {
+        UserInfo userInfo = userRepository.findByEmail(userName)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        messageSource.getMessage("user.found.fail",null, Locale.getDefault())
+                ));
+        ApiResponse<Object> response = new ApiResponse<>(
+                HttpStatus.OK,
+                messageSource.getMessage("users.retrieved.success",null, Locale.getDefault()),
+                userInfo
+        );
         return ResponseEntity.ok(response);
     }
 }
